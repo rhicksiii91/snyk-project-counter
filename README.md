@@ -1,8 +1,10 @@
 # snyk-project-counter
 
 ## Features
-
 Returns project count for all organizations that the SNYK_TOKEN has access to.
+
+## Requirements
+Node 16
 
 ## Running
 ```bash
