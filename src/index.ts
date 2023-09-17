@@ -22,24 +22,12 @@ interface OrgData {
     }
 }
 
-interface OrgProjectData {
-    orgName: string;
-    projectCount: string;
-
-}
-
-async function returnProjectCountPreOrganization(){
+async function returnProjectCountPerOrganization(){
     let orgIdAndName: any = await fetchOrgs()
-    const OrgProjectCountData: OrgProjectData[] = [];
 
     // Looping through org IDs and returning project count
     for (const orgData of orgIdAndName) {
         let projectCount: any = await fetchProjectsCount(orgData.id);
-        const csvData: OrgProjectData = {
-            orgName: orgData.name,
-            projectCount: projectCount,
-        }
-        OrgProjectCountData.push(csvData)
         
         console.log("Snyk Organziation " + orgData.name + " has " + JSON.stringify(projectCount) + " projects" )
     }
@@ -144,4 +132,4 @@ async function fetchOrgs() {
 }
 
 // Running app
-returnProjectCountPreOrganization()
+returnProjectCountPerOrganization()
