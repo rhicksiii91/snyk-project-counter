@@ -32,8 +32,9 @@ async function returnProjectCountPreOrganization(){
     let orgIdAndName: any = await fetchOrgs()
     const OrgProjectCountData: OrgProjectData[] = [];
 
+    // Looping through org IDs and returning project count
     for (const orgData of orgIdAndName) {
-        let projectCount: any = await fetchProjects(orgData.id);
+        let projectCount: any = await fetchProjectsCount(orgData.id);
         const csvData: OrgProjectData = {
             orgName: orgData.name,
             projectCount: projectCount,
@@ -42,18 +43,16 @@ async function returnProjectCountPreOrganization(){
         
         console.log("Snyk Organziation " + orgData.name + " has " + JSON.stringify(projectCount) + " projects" )
     }
-    const data: any = OrgProjectCountData
 }
 
-async function fetchProjects(orgId: string) {
+async function fetchProjectsCount(orgId: string) {
     let url: string = `https://api.snyk.io/rest/orgs/${orgId}/projects?version=${restApiVersion}&limit=100`
     let hasNextLink = true;
-    const projectInfo: any[] = [];
     let projectCount = 0;
 
-    // console.log("Starting to collect Projects data for " + orgName + " Snyk Organization")
     while (hasNextLink) {
         try {
+            // Calling Snyk Rest Projects endpoint
             const response: any = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -63,22 +62,11 @@ async function fetchProjects(orgId: string) {
             });
 
             if (response.status == 200) {
-                // console.log("Found projects")
                 const projectData: any  = await response.json()
-
-                // console.log("Here is the project data " + JSON.stringify(projectData.data))
+                // Counting projects
                 projectCount = projectCount + Object.keys(projectData.data).length
-                // console.log("Here is the project count " + projectCount)
 
-                // for (const i of projectData.data) {
-                //     const orgDataHolder: OrgInfo = {
-                //         id: i.id,
-                //         name: i.attributes.name
-                //     };
-
-                //     orgInfo.push(orgDataHolder)
-                // }
-
+                // Checking for more pages
                 if (projectData.links && projectData.links.next) {
                     hasNextLink = true
                     url = "https://api.snyk.io" + projectData.links.next
@@ -112,6 +100,7 @@ async function fetchOrgs() {
     while (hasNextLink){
         try {
 
+            // Calling Snyk Rest orgs endpoint
             const response: any = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -132,6 +121,7 @@ async function fetchOrgs() {
                     orgInfo.push(orgDataHolder)
                 }
 
+                // Checking for more pages
                 if (orgData.links && orgData.links.next) {
                     hasNextLink = true
                     url = "https://api.snyk.io" + orgData.links.next
@@ -151,8 +141,7 @@ async function fetchOrgs() {
             hasNextLink = false
         }
     }
-
-    
 }
 
+// Running app
 returnProjectCountPreOrganization()
