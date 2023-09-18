@@ -28,15 +28,15 @@ async function app() {
 
     // Looping through org IDs and returning project count
     for (const orgData of orgIdAndName) {
-        let projectCount: any = await fetchProjectsCount(orgData.id);
-        let targetCount: any = await fetchTargetCount(orgData.id);
+        let projectCount: number | undefined = await fetchProjectsCount(orgData.id);
+        let targetCount: number | undefined = await fetchTargetCount(orgData.id);
 
         console.log("Snyk Organziation " + orgData.name + " has " + JSON.stringify(projectCount) + " projects and " + + JSON.stringify(targetCount) + " targets")
     }
 }
 
 async function fetchTargetCount(orgId: string) {
-    let url: string = `https://api.snyk.io/rest/orgs/${orgId}/targets?version=${restBetaApiVersion}&limit=100`
+    let url: string = `https://api.snyk.io/rest/orgs/${orgId}/targets?version=${restBetaApiVersion}&limit=100&excludeEmpty=false`
     let hasNextLink = true;
     let targetCount = 0;
 
