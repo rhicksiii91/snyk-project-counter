@@ -23,7 +23,7 @@ interface OrgData {
     }
 }
 
-async function returnProjectCountPerOrganization() {
+async function app() {
     let orgIdAndName: any = await fetchOrgs()
 
     // Looping through org IDs and returning project count
@@ -178,4 +178,4 @@ async function fetchOrgs() {
 }
 
 // Running app
-returnProjectCountPerOrganization()
+app()
