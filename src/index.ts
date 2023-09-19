@@ -2,6 +2,7 @@ import fetch from 'node-fetch';
 
 const snykToken: any = process.env.SNYK_TOKEN;
 const snykOrgId: any = process.env.SNYK_ORG_ID;
+const debug: any = process.env.DEBUG;
 const restApiVersion: string = '2023-09-14'
 const restBetaApiVersion: string = '2023-09-14~beta'
 
@@ -27,12 +28,13 @@ interface OrgData {
 async function app() {
     let orgIdAndName: any = await fetchOrgs()
 
-    if (snykOrgId !== undefined && snykOrgId !== 0){
+    // Checking if SNYK_ORG_ID ernvironment variable exist and is not undefined.  If true, data results for organziation.  If the result is false, return data for all organizations
+    if (snykOrgId !== undefined && snykOrgId.length >= 1){
         // Looping through org IDs and returning project count
         for (const orgData of orgIdAndName) {
             if (snykOrgId === orgData.id){
-                let projectCount: number | undefined = await fetchProjectsCount(orgData.id);
-                let targetCount: number | undefined = await fetchTargetCount(orgData.id);
+                let projectCount: number | undefined = await fetchProjectsCount(orgData.id, orgData.name);
+                let targetCount: number | undefined = await fetchTargetCount(orgData.id, orgData.name);
 
                 console.log("Snyk Organziation " + orgData.name + " has " + JSON.stringify(projectCount) + " projects and " + + JSON.stringify(targetCount) + " targets")
                 break;
@@ -43,8 +45,8 @@ async function app() {
     else {
         // Looping through org IDs and returning project count
         for (const orgData of orgIdAndName) {
-            let projectCount: number | undefined = await fetchProjectsCount(orgData.id);
-            let targetCount: number | undefined = await fetchTargetCount(orgData.id);
+            let projectCount: number | undefined = await fetchProjectsCount(orgData.id, orgData.name);
+            let targetCount: number | undefined = await fetchTargetCount(orgData.id, orgData.name);
 
             console.log("Snyk Organziation " + orgData.name + " has " + JSON.stringify(projectCount) + " projects and " + + JSON.stringify(targetCount) + " targets")
         }
@@ -52,7 +54,7 @@ async function app() {
     
 }
 
-async function fetchTargetCount(orgId: string) {
+async function fetchTargetCount(orgId: string, orgName: string) {
     let url: string = `https://api.snyk.io/rest/orgs/${orgId}/targets?version=${restBetaApiVersion}&limit=100&excludeEmpty=false`
     let hasNextLink = true;
     let targetCount = 0;
@@ -67,7 +69,12 @@ async function fetchTargetCount(orgId: string) {
                     'Authorization': `token ${snykToken}`
                 }
             });
-            
+
+            // Debug log
+            if (debug){
+            console.debug("Targets api call status code: " + response.status)
+            console.debug("Org name: " + orgName)
+            }            
 
             // Rate limit check and sleep
             if (response.status == 429) {
@@ -103,7 +110,7 @@ async function fetchTargetCount(orgId: string) {
 
 }
 
-async function fetchProjectsCount(orgId: string) {
+async function fetchProjectsCount(orgId: string, orgName: string) {
     let url: string = `https://api.snyk.io/rest/orgs/${orgId}/projects?version=${restApiVersion}&limit=100`
     let hasNextLink = true;
     let projectCount = 0;
@@ -119,6 +126,12 @@ async function fetchProjectsCount(orgId: string) {
                     'Authorization': `token ${snykToken}`
                 }
             });
+
+            // Debug log
+            if (debug){
+            console.debug("Projects api call status code: " + response.status)
+            console.debug("Org name: " + orgName)
+            }
 
             // Rate limit check and sleep
             if (response.status == 429) {
@@ -174,7 +187,10 @@ async function fetchOrgs() {
                     'Authorization': `token ${snykToken}`
                 }
             });
-            
+
+            if(debug){
+            console.debug("Orgs api call status code: " + response.status)
+            }
 
             // Rate limit check and sleep
             if (response.status == 429) {
