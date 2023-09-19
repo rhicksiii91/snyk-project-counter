@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 
 const snykToken: any = process.env.SNYK_TOKEN;
+const snykOrgId: any = process.env.SNYK_ORG_ID;
 const restApiVersion: string = '2023-09-14'
 const restBetaApiVersion: string = '2023-09-14~beta'
 
@@ -26,20 +27,36 @@ interface OrgData {
 async function app() {
     let orgIdAndName: any = await fetchOrgs()
 
-    // Looping through org IDs and returning project count
-    for (const orgData of orgIdAndName) {
-        let projectCount: number | undefined = await fetchProjectsCount(orgData.id);
-        let targetCount: number | undefined = await fetchTargetCount(orgData.id);
+    if (snykOrgId !== undefined && snykOrgId !== 0){
+        // Looping through org IDs and returning project count
+        for (const orgData of orgIdAndName) {
+            if (snykOrgId === orgData.id){
+                let projectCount: number | undefined = await fetchProjectsCount(orgData.id);
+                let targetCount: number | undefined = await fetchTargetCount(orgData.id);
 
-        console.log("Snyk Organziation " + orgData.name + " has " + JSON.stringify(projectCount) + " projects and " + + JSON.stringify(targetCount) + " targets")
+                console.log("Snyk Organziation " + orgData.name + " has " + JSON.stringify(projectCount) + " projects and " + + JSON.stringify(targetCount) + " targets")
+                break;
+            }
+            
+        }
     }
+    else {
+        // Looping through org IDs and returning project count
+        for (const orgData of orgIdAndName) {
+            let projectCount: number | undefined = await fetchProjectsCount(orgData.id);
+            let targetCount: number | undefined = await fetchTargetCount(orgData.id);
+
+            console.log("Snyk Organziation " + orgData.name + " has " + JSON.stringify(projectCount) + " projects and " + + JSON.stringify(targetCount) + " targets")
+        }
+    }
+    
 }
 
 async function fetchTargetCount(orgId: string) {
     let url: string = `https://api.snyk.io/rest/orgs/${orgId}/targets?version=${restBetaApiVersion}&limit=100&excludeEmpty=false`
     let hasNextLink = true;
     let targetCount = 0;
-
+    
     while (hasNextLink) {
         try {
             // Calling Snyk Rest Targets endpoint
@@ -50,6 +67,13 @@ async function fetchTargetCount(orgId: string) {
                     'Authorization': `token ${snykToken}`
                 }
             });
+            
+
+            // Rate limit check and sleep
+            if (response.status == 429) {
+                console.log("Hit the rate limit, sleeping for one minute")
+                await new Promise(resolve => setTimeout(resolve, 60001));
+            }
 
             if (response.status == 200) {
                 const targetData: any = await response.json()
@@ -83,8 +107,9 @@ async function fetchProjectsCount(orgId: string) {
     let url: string = `https://api.snyk.io/rest/orgs/${orgId}/projects?version=${restApiVersion}&limit=100`
     let hasNextLink = true;
     let projectCount = 0;
-
+    
     while (hasNextLink) {
+        
         try {
             // Calling Snyk Rest Projects endpoint
             const response: any = await fetch(url, {
@@ -94,6 +119,13 @@ async function fetchProjectsCount(orgId: string) {
                     'Authorization': `token ${snykToken}`
                 }
             });
+
+            // Rate limit check and sleep
+            if (response.status == 429) {
+                console.log("Hit the rate limit, sleeping for one minute")
+                await new Promise(resolve => setTimeout(resolve, 60001));
+            }
+            
 
             if (response.status == 200) {
                 const projectData: any = await response.json()
@@ -142,6 +174,13 @@ async function fetchOrgs() {
                     'Authorization': `token ${snykToken}`
                 }
             });
+            
+
+            // Rate limit check and sleep
+            if (response.status == 429) {
+                console.log("Hit the rate limit, sleeping for one minute")
+                await new Promise(resolve => setTimeout(resolve, 60001));
+            }
 
             if (response.status == 200) {
                 const orgData: OrgData = await response.json()
@@ -179,3 +218,4 @@ async function fetchOrgs() {
 
 // Running app
 app()
+

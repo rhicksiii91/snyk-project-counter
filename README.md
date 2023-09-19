@@ -1,7 +1,11 @@
 # snyk-project-counter
 
 ## Features
-Returns project count for all organizations that the SNYK_TOKEN has access to.
+Returns project and target count for all organizations that the SNYK_TOKEN has access to.  You can specify a Snyk organization id to return project and target data.
+
+## Environment variables
+SNYK_TOKEN - Snyk serivce or personal token - required
+SNYK_ORG_ID - Snyk organization ID - optional
 
 ## Requirements
 Node 16
